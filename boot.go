@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // Package otasign contains code to sign Android system images and OTA images.
-package otasign
+package apksigner
 
 // Note that this particular file includes only code related to signing boot images (i.e. kernels.)
 
@@ -24,12 +24,8 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/asn1"
-	"encoding/binary"
 	"errors"
 	"fmt"
-
-	"playground/android"
-	"playground/log"
 )
 
 type AlgorithmID struct {
@@ -163,7 +159,7 @@ func (sig *BootSig) Verify(b []byte) error {
 
 // Sign generates the signature from the tree structure represented by `sig`. Once Marshal()ed, the
 // resulting bytes can be appended to a boot image.
-func (sig *BootSig) Sign(target string, sc *android.SigningCert) error {
+func (sig *BootSig) Sign(target string, sc *SigningCert) error {
 	if err := sc.Resolve(); err != nil {
 		return err
 	}
@@ -217,7 +213,6 @@ func (sig *BootSig) Signer() *x509.Certificate {
 func (sig *BootSig) Marshal() []byte {
 	b, err := asn1.Marshal(sig.BootSigASN1)
 	if err != nil {
-		log.Debug("BootSig.Marshal", "error marshaling boot signature to ASN.1", err)
 		return nil
 	}
 	return b
@@ -335,7 +330,7 @@ func (img *BootImage) Verify(cert *x509.Certificate) error {
 
 // Sign the boot image in `img` for a particular mount point target using the provided
 // certificate.
-func (img *BootImage) Sign(target string, sc *android.SigningCert) error {
+func (img *BootImage) Sign(target string, sc *SigningCert) error {
 	l := img.ComputeLength()
 	if l > len(img.raw) {
 		return errors.New("truncated image")
@@ -373,7 +368,6 @@ func (img *BootImage) IsSigned() bool {
 	// check for truncated boot image -- can't possibly be signed
 	l := img.ComputeLength()
 	if l >= len(img.raw) {
-		log.Debug("BootImage.IsSigned", "computed length > input length")
 		return false
 	}
 
@@ -386,47 +380,4 @@ func (img *BootImage) IsSigned() bool {
 
 	// looks like a valid boot signature
 	return true
-}
-
-// TODO: promote these out of apksign into a new playground/binary package?
-func pop32(in []byte) (uint32, []byte) {
-	return binary.LittleEndian.Uint32(in[:4]), in[4:]
-}
-
-func pop64(in []byte) (uint64, []byte) {
-	return binary.LittleEndian.Uint64(in[:8]), in[8:]
-}
-
-func popN(in []byte, count int) ([]byte, []byte) {
-	return in[:count], in[count:]
-}
-
-func push32(in []byte) []byte {
-	l := uint32(len(in))
-	out := make([]byte, l+4)
-	binary.LittleEndian.PutUint32(out, l)
-	copy(out[4:], in)
-	return out
-}
-
-func push64(in []byte) []byte {
-	l := uint64(len(in))
-	out := make([]byte, l+8)
-	binary.LittleEndian.PutUint64(out, l)
-	copy(out[8:], in)
-	return out
-}
-
-func concat(blocks ...[]byte) []byte {
-	totes := 0
-	for _, b := range blocks {
-		totes += len(b)
-	}
-	out := make([]byte, totes)
-	cur := out
-	for _, b := range blocks {
-		copy(cur, b)
-		cur = cur[len(b):]
-	}
-	return out
 }

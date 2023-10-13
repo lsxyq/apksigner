@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apksign
+package apksigner
 
 import (
 	"bytes"
@@ -23,9 +23,6 @@ import (
 	"crypto/x509"
 	"encoding/binary"
 	"errors"
-
-	"playground/android"
-	"playground/log"
 )
 
 /* This file implements the Android APK signing scheme v2. See https://source.android.com/security/apksigning/v2.html */
@@ -77,7 +74,7 @@ func ParseV2Block(block []byte) (*V2Block, error) {
 	// check the key/value pair block; we expect only one entry, w/ key 0x7109871a (meaning signature v2 specifically)
 	asv2Len, block := pop64(block)
 	if uint64(len(block)) != asv2Len {
-		log.Debug("ParseV2Block", "unsupported: multiple ID/Value pair blocks at top level", asv2Len, len(block))
+		//log.Debug("ParseV2Block", "unsupported: multiple ID/Value pair blocks at top level", asv2Len, len(block))
 		return nil, errors.New("unsupported: multiple ID/Value pair blocks at top level")
 		// So there are 3 reasons there might be multiple blocks here:
 		//
@@ -429,17 +426,17 @@ func (v2 *V2Block) Verify(z *Zip) error {
 // Sign generates an Android v2 signature block from `v2` and then injects that block into the
 // indicated Zip instance. On success, it returns the bytes of the resulting signed Zip file, and a
 // nil error. On failure, it returns a non-nil error.
-func (v2 *V2Block) Sign(z *Zip, keys []*android.SigningCert) ([]byte, error) {
+func (v2 *V2Block) Sign(z *Zip, keys []*SigningCert) ([]byte, error) {
 	v2.Signers = make([]*Signer, 0)
 
 	// the ASv2 scheme spec does not actually forbid having multiple 'signer' blocks with the same
 	// public keymatter, but the clear intention is that these be grouped; so first, batch up
 	// SigningCerts that share the same hash
-	keyMap := make(map[string][]*android.SigningCert)
+	keyMap := make(map[string][]*SigningCert)
 	for _, sk := range keys {
 		cfgs, ok := keyMap[sk.CertHash]
 		if !ok {
-			cfgs = make([]*android.SigningCert, 0)
+			cfgs = make([]*SigningCert, 0)
 		}
 		keyMap[sk.CertHash] = append(cfgs, sk)
 	}
@@ -461,12 +458,12 @@ func (v2 *V2Block) Sign(z *Zip, keys []*android.SigningCert) ([]byte, error) {
 			var algoID uint32
 			var hasher crypto.Hash
 			switch sk.Type {
-			case android.RSA:
+			case RSA:
 				switch sk.Hash {
-				case android.SHA256:
+				case SHA256:
 					algoID = 0x0103
 					hasher = crypto.SHA256
-				case android.SHA512:
+				case SHA512:
 					algoID = 0x0104
 					hasher = crypto.SHA512
 				default:
@@ -504,11 +501,11 @@ func (v2 *V2Block) Sign(z *Zip, keys []*android.SigningCert) ([]byte, error) {
 			var hasher crypto.Hash
 			var err error
 			switch sk.Type {
-			case android.RSA:
+			case RSA:
 				switch sk.Hash {
-				case android.SHA256:
+				case SHA256:
 					hasher = crypto.SHA256
-				case android.SHA512:
+				case SHA512:
 					hasher = crypto.SHA512
 				}
 			}

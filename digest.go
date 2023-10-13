@@ -12,17 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apksign
+package apksigner
 
 import (
 	"bytes"
 	"crypto"
 	"encoding/binary"
-	"encoding/hex"
 	"hash"
 	"io"
-
-	"playground/log"
 )
 
 // Digester is a crypto.Hash implementation that implements the Merkel-tree-flavored hash scheme
@@ -59,11 +56,11 @@ func (d *Digester) Sum(b []byte) []byte {
 	accumHash.Write(numChunks)
 	for _, c := range d.chunks {
 		buf := <-c
-		log.Debug("Digester.Sum", "chunk hash", hex.EncodeToString(buf))
+		//log.Debug("Digester.Sum", "chunk hash", hex.EncodeToString(buf))
 		_, err := io.Copy(accumHash, bytes.NewReader(buf))
 		if err != nil {
 			// this is highly unlikely to happen, but given return type, nothing we can do
-			log.Debug("Digester.Sum", "error copying RAM buffers", err)
+			//log.Debug("Digester.Sum", "error copying RAM buffers", err)
 			break
 		}
 	}

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apksign
+package apksigner
 
 import (
 	"archive/zip"
@@ -24,8 +24,6 @@ import (
 	"io"
 	"io/ioutil"
 	"strings"
-
-	"playground/log"
 )
 
 /*
@@ -135,7 +133,7 @@ func (mf *manifest) marshal() []byte {
 	for name, hashes := range mf.digests {
 		h, ok := hashes[crypto.SHA256]
 		if !ok {
-			log.Debug("apksign.manifest.marshal", "missing SHA256 hash for '"+name+"'")
+			//log.Debug("apksign.manifest.marshal", "missing SHA256 hash for '"+name+"'")
 			continue
 		}
 		attrs := map[string]string{"SHA-256-Digest": base64.StdEncoding.EncodeToString(h)}
@@ -149,29 +147,29 @@ func (mf *manifest) marshal() []byte {
 func (left *manifest) equals(right *manifest) bool {
 	if left == nil || right == nil {
 		// this feels a bit awkward when left & right are both nil, but NaN != NaN too, so...
-		log.Debug("manifest.equals", "nil")
+		//log.Debug("manifest.equals", "nil")
 		return false
 	}
 
 	if len(left.digests) != len(right.digests) {
-		log.Debug("manifest.equals", "wrong len", len(left.digests), len(right.digests))
+		//log.Debug("manifest.equals", "wrong len", len(left.digests), len(right.digests))
 		return false
 	}
 
 	for k, lv := range left.digests {
 		rv, ok := right.digests[k]
 		if !ok {
-			log.Debug("manifest.equals", "right missing key '"+k+"'")
+			//log.Debug("manifest.equals", "right missing key '"+k+"'")
 			return false
 		}
 		for h, lb := range lv {
 			rb, ok := rv[h]
 			if !ok {
-				log.Debug("manifest.equals", "right missing subkey", h, lv, rv)
+				//log.Debug("manifest.equals", "right missing subkey", h, lv, rv)
 				return false
 			}
 			if !bytes.Equal(lb, rb) {
-				log.Debug("manifest.equals", "hashes differ", h)
+				//log.Debug("manifest.equals", "hashes differ", h)
 				return false
 			}
 		}
@@ -291,7 +289,7 @@ func (sf *signedFile) marshal() []byte {
 	for name, hashes := range sf.digests {
 		h, ok := hashes[crypto.SHA256]
 		if !ok {
-			log.Debug("apksign.signedFile.marshal", "missing SHA256 hash for '"+name+"'")
+			//log.Debug("apksign.signedFile.marshal", "missing SHA256 hash for '"+name+"'")
 			continue
 		}
 		attrs := map[string]string{"SHA-256-Digest": base64.StdEncoding.EncodeToString(h)}
@@ -311,19 +309,19 @@ func (sf *signedFile) setManifest(hash crypto.Hash, mf *manifest) {
 func (sf *signedFile) verify(mf *manifest) bool {
 	if sf == nil || mf == nil {
 		// this feels a bit awkward when left & right are both nil, but NaN != NaN too, so...
-		log.Debug("signedFile.verify", "nil input")
+		//log.Debug("signedFile.verify", "nil input")
 		return false
 	}
 
 	if len(mf.digests) != len(sf.digests) {
-		log.Debug("signedFile.verify", "differing lengths")
+		//log.Debug("signedFile.verify", "differing lengths")
 		return false
 	}
 
 	for k, lv := range sf.digests {
 		rv, ok := mf.digests[k]
 		if !ok {
-			log.Debug("signedFile.verify", "manifest missing key '"+k+"'")
+			//log.Debug("signedFile.verify", "manifest missing key '"+k+"'")
 			return false
 		}
 
@@ -523,7 +521,7 @@ func extractDigests(attrs map[string]string) (string, map[crypto.Hash][]byte) {
 	var name string
 	var ok bool
 	if name, ok = attrs["Name"]; !ok {
-		log.Debug("apksign.extractDigests", "digest attr set missing Name", attrs)
+		//log.Debug("apksign.extractDigests", "digest attr set missing Name", attrs)
 		return "", nil
 	}
 
@@ -541,13 +539,13 @@ func extractDigests(attrs map[string]string) (string, map[crypto.Hash][]byte) {
 			potato = crypto.SHA1
 		}
 		if potato < crypto.SHA1 {
-			log.Debug("apksign.extractDigests", "unsupported hash algorithm in file")
+			//log.Debug("apksign.extractDigests", "unsupported hash algorithm in file")
 			return "", nil
 		} else {
 			if b, err := base64.StdEncoding.DecodeString(v); err == nil {
 				out[potato] = b[:]
 			} else {
-				log.Debug("apksign.extractDigests", "hash value failed to base64-decode")
+				//log.Debug("apksign.extractDigests", "hash value failed to base64-decode")
 			}
 		}
 	}

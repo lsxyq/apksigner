@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package android
+package apksigner
 
 import (
 	"crypto"
@@ -26,8 +26,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-
-	"playground/log"
 )
 
 // SigningKey wraps a private key disk file with functions that know how to parse the key, and sign
@@ -75,11 +73,11 @@ func (sk *SigningKey) Resolve() error {
 		}
 		key, err = x509.ParsePKCS1PrivateKey(block.Bytes) // assumes ASN1 DER representation of a PKCS1 key
 		if err != nil {
-			log.Debug("SigningKey.Resolve", "error parsing PKCS1 private key, retrying with PKCS8", err)
+			//log.Debug("SigningKey.Resolve", "error parsing PKCS1 private key, retrying with PKCS8", err)
 
 			keyPKCS8, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 			if err != nil {
-				log.Debug("SigningKey.Resolve", "error parsing PKCS8 private key", err)
+				//log.Debug("SigningKey.Resolve", "error parsing PKCS8 private key", err)
 				return err
 			}
 			key = keyPKCS8.(*rsa.PrivateKey)
@@ -114,7 +112,7 @@ func (sk *SigningKey) Sign(data []byte, hash crypto.Hash) ([]byte, error) {
 func (sk *SigningKey) SignPrehashed(data []byte, hash crypto.Hash) ([]byte, error) {
 	res, err := rsa.SignPKCS1v15(rand.Reader, sk.Key, hash, data)
 	if err != nil {
-		log.Debug("SigningKey.SignPrehashed", "error during sign", err)
+		//log.Debug("SigningKey.SignPrehashed", "error during sign", err)
 	}
 	return res, err
 }
@@ -167,7 +165,7 @@ func (sc *SigningCert) Resolve() error {
 		}
 		certPubKey := cert.PublicKey.(*rsa.PublicKey)
 		if sc.Key.N.Cmp(certPubKey.N) != 0 || sc.Key.E != certPubKey.E {
-			log.Debug("SigningCert.Resolve", "certificate public key does not match private key's copy", sc.Key.N, certPubKey.N, sc.Key.E, certPubKey.E)
+			//log.Debug("SigningCert.Resolve", "certificate public key does not match private key's copy", sc.Key.N, certPubKey.N, sc.Key.E, certPubKey.E)
 			return errors.New("certificate public key does not match private key's copy")
 		}
 		sc.Certificate, sc.CertHash = cert, certHash
@@ -192,7 +190,7 @@ func safeLoad(path string) ([]byte, error) {
 		}
 	*/
 	if path, err = filepath.Abs(path); err != nil {
-		log.Error("android.safeLoad", "file '"+path+"' does not resolve")
+		//log.Error("android.safeLoad", "file '"+path+"' does not resolve")
 		return nil, err
 	}
 	/* This turns out to be spammy and restrictive. Revisit this later.
@@ -201,12 +199,12 @@ func safeLoad(path string) ([]byte, error) {
 	}
 	*/
 	if stat, err := os.Stat(path); err != nil || (stat != nil && stat.IsDir()) {
-		log.Error("android.safeLoad", "file '"+path+"' does not stat or is a directory", err)
+		//log.Error("android.safeLoad", "file '"+path+"' does not stat or is a directory", err)
 		return nil, err
 	}
 	fileBytes, err := ioutil.ReadFile(path)
 	if err != nil {
-		log.Error("android.safeLoad", "file '"+path+"' failed to load", err)
+		//log.Error("android.safeLoad", "file '"+path+"' failed to load", err)
 		return nil, err
 	}
 	return fileBytes, nil

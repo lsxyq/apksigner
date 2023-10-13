@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apksign
+package apksigner
 
 import (
 	"crypto/x509"
@@ -21,8 +21,6 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-
-	"playground/android"
 )
 
 const (
@@ -62,17 +60,17 @@ func saveFile(name string, b []byte) error {
 
 var sdkapk, unsapk, rawzip []byte
 
-var keys = []*android.SigningCert{
-	{SigningKey: android.SigningKey{
+var keys = []*SigningCert{
+	{SigningKey: SigningKey{
 		KeyPath: keyPath,
-		Type:    android.RSA,
-		Hash:    android.SHA256,
+		Type:    RSA,
+		Hash:    SHA256,
 	},
 		CertPath: certPath,
 	},
 }
 
-var keysStream []*android.SigningCert
+var keysStream []*SigningCert
 
 func InitKeyFromStream() {
 	// Check Private Key File
@@ -122,10 +120,10 @@ func InitKeyFromStream() {
 		return
 	}
 
-	keysStream = []*android.SigningCert{
-		{SigningKey: android.SigningKey{
-			Type: android.RSA,
-			Hash: android.SHA256,
+	keysStream = []*SigningCert{
+		{SigningKey: SigningKey{
+			Type: RSA,
+			Hash: SHA256,
 			Key:  key,
 		},
 			CertBytes: certBytes,

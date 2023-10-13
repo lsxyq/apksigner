@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apksign
+package apksigner
 
 import (
 	"archive/zip"
@@ -26,9 +26,6 @@ import (
 	"strings"
 
 	"go.mozilla.org/pkcs7"
-
-	"playground/android"
-	"playground/log"
 )
 
 type sigPair struct {
@@ -71,7 +68,7 @@ func ParseZip(buf []byte, writer *V1Writer) (*V1Reader, error) {
 
 	// start a reader on the zip input to feed us individual files
 	if z, err = zip.NewReader(bytes.NewReader(buf), int64(len(buf))); err != nil {
-		log.Debug("ParseZip", "reader")
+		//log.Debug("ParseZip", "reader")
 		return nil, err
 	}
 
@@ -260,7 +257,7 @@ func (v1 *V1Writer) Add(zf *zip.File) error {
 // Sign generates the JAR manifest and assorted signature files that constitute a JAR signature.
 // That is, it generates the manifest and `.SF` files with the digests of the JAR's files, and then
 // signs the `.SF` file. All these files are then included in the Zip itself.
-func (v1 *V1Writer) Sign(keys []*android.SigningCert, signifyV2 bool) error {
+func (v1 *V1Writer) Sign(keys []*SigningCert, signifyV2 bool) error {
 	if v1 == nil || v1.manifest == nil || v1.writer == nil {
 		return errors.New("V1Writer.Sign called uninitialized")
 	}
@@ -301,7 +298,7 @@ func (v1 *V1Writer) Sign(keys []*android.SigningCert, signifyV2 bool) error {
 		}
 
 		if _, err = pkcs7.Parse(signed); err != nil {
-			log.Debug("V1Writer.Sign", "failed to roundtrip parse generated PKCS7")
+			//log.Debug("V1Writer.Sign", "failed to roundtrip parse generated PKCS7")
 			return err
 		}
 

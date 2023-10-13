@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package apksign
+package apksigner
 
 import (
 	"archive/zip"
@@ -20,9 +20,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"strings"
-
-	"playground/android"
-	"playground/log"
 )
 
 // Zip loads and performs operations on ZIP files required for signing Android APKs. It supports the
@@ -164,7 +161,7 @@ func NewZip(buf []byte) (*Zip, error) {
 
 			z.IsV2Signed = z.asv2Offset > 0
 
-			log.Debug("Zip.New", "ASv2, CD, EOCD", z.asv2Offset, z.cdOffset, z.eocdOffset)
+			//log.Debug("Zip.New", "ASv2, CD, EOCD", z.asv2Offset, z.cdOffset, z.eocdOffset)
 
 			return z, nil
 		}
@@ -229,7 +226,7 @@ func (z *Zip) Verify() error {
 // SignV1 signs the zip with the provided keys, using the Java signed-JAR signing rubric, only. This
 // was used by Android up to the Nougat release, when it was supplemented by a more secure
 // whole-file "v2" scheme.
-func (z *Zip) SignV1(keys []*android.SigningCert) (*Zip, error) {
+func (z *Zip) SignV1(keys []*SigningCert) (*Zip, error) {
 	for _, sk := range keys {
 		if err := sk.Resolve(); err != nil {
 			return nil, err
@@ -256,7 +253,7 @@ func (z *Zip) SignV1(keys []*android.SigningCert) (*Zip, error) {
 
 // SignV2 signs the zip with the provided keys, using the Android-specific whole-file "v2" signing
 // rubric, only.
-func (z *Zip) SignV2(keys []*android.SigningCert) (*Zip, error) {
+func (z *Zip) SignV2(keys []*SigningCert) (*Zip, error) {
 	for _, sk := range keys {
 		if err := sk.Resolve(); err != nil {
 			return nil, err
@@ -277,10 +274,10 @@ func (z *Zip) SignV2(keys []*android.SigningCert) (*Zip, error) {
 // (Android-specific whole-file) signing rubrics. Note that `Sign()` IS NOT equivalent to
 // `SignV1(); SignV2()`. When signed with both schemes, the JAR `.SF` files have an additional
 // header, per spec.
-func (z *Zip) Sign(keys []*android.SigningCert) (*Zip, error) {
+func (z *Zip) Sign(keys []*SigningCert) (*Zip, error) {
 	for _, sk := range keys {
 		if err := sk.Resolve(); err != nil {
-			log.Debug("Zip.Sign", "error resolving signing key", err)
+			//log.Debug("Zip.Sign", "error resolving signing key", err)
 			return nil, err
 		}
 	}
@@ -293,26 +290,26 @@ func (z *Zip) Sign(keys []*android.SigningCert) (*Zip, error) {
 
 	w = NewV1Writer()
 	if _, err = ParseZip(z.raw, w); err != nil {
-		log.Debug("Zip.Sign", "error in parsing", err)
+		//log.Debug("Zip.Sign", "error in parsing", err)
 		return nil, err
 	}
 
 	if err = w.Sign(keys, true); err != nil {
-		log.Debug("Zip.Sign", "error in v1 signing", err)
+		//log.Debug("Zip.Sign", "error in v1 signing", err)
 		return nil, err
 	}
 	if b, err = w.Marshal(); err != nil {
-		log.Debug("Zip.Sign", "error in marshaling", err)
+		//log.Debug("Zip.Sign", "error in marshaling", err)
 		return nil, err
 	}
 	if newZ, err = NewZip(b); err != nil {
-		log.Debug("Zip.Sign", "error in reparse", err)
+		//log.Debug("Zip.Sign", "error in reparse", err)
 		return nil, err
 	}
 
 	v2 = &V2Block{}
 	if b, err = v2.Sign(newZ, keys); err != nil {
-		log.Debug("Zip.Sign", "error in v2 signing", err)
+		//log.Debug("Zip.Sign", "error in v2 signing", err)
 		return nil, err
 	}
 
