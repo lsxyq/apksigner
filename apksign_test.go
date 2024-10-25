@@ -28,6 +28,7 @@ const (
 	certPath   = "testdata/signing.crt"
 	sdkapkPath = "testdata/app.1.apk"
 	unsapkPath = "testdata/app.2.apk"
+	notZipPath = "testdata/app3.apk"
 	rawzipPath = "testdata/just.a.zip"
 )
 
@@ -58,7 +59,7 @@ func saveFile(name string, b []byte) error {
 	return nil
 }
 
-var sdkapk, unsapk, rawzip []byte
+var sdkapk, unsapk, rawzip, noZip []byte
 
 var keys = []*SigningCert{
 	{SigningKey: SigningKey{
@@ -145,8 +146,17 @@ func TestMain(m *testing.M) {
 	if rawzip, err = loadFile(rawzipPath); err != nil {
 		os.Exit(1)
 	}
-
+	if noZip, err = loadFile(notZipPath); err != nil {
+		os.Exit(1)
+	}
 	os.Exit(m.Run())
+}
+
+func TestNotAPK(t *testing.T) {
+	if _, err := NewZip(noZip); err != nil {
+		t.Log("error parsing Zip", err)
+		t.FailNow()
+	}
 }
 
 func TestSDKAPK(t *testing.T) {

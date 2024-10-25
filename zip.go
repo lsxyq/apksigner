@@ -77,6 +77,9 @@ func NewZip(buf []byte) (*Zip, error) {
 		// to accommodate a possible zip file comment.
 
 		start = z.size - 22 - int64(i)
+		if start < 0 {
+			return nil, errors.New("input is too small to be a zip")
+		}
 		b = z.raw[start : start+22]
 
 		// check for the EOCD magic string, 0x06054b50. note that zip files are little endian
